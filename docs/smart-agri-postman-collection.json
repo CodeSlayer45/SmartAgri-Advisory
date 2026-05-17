@@ -1,0 +1,98 @@
+{
+  "info": {
+    "name": "Smart Agri Advisory API",
+    "_postman_id": "d68a8e3f-3d66-454f-b75f-8d84ecfe1234",
+    "description": "Postman collection for Smart Agri Advisory backend.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Create Field",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-API-KEY", "value": "{{apiKey}}" }],
+        "url": { "raw": "{{baseUrl}}/api/field", "host": ["{{baseUrl}}"], "path": ["api", "field"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fieldName\": \"Field 1\",\n  \"cropName\": \"Marigold\",\n  \"acreage\": 1.0,\n  \"location\": \"Farmer live GPS\",\n  \"locationMode\": \"AUTO_GPS\",\n  \"latitude\": 16.8524,\n  \"longitude\": 74.5815,\n  \"sowingDate\": \"2026-04-01\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Update Field Location Mode",
+      "request": {
+        "method": "PATCH",
+        "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-API-KEY", "value": "{{apiKey}}" }],
+        "url": { "raw": "{{baseUrl}}/api/field/1/location", "host": ["{{baseUrl}}"], "path": ["api", "field", "1", "location"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"locationMode\": \"MANUAL\",\n  \"location\": \"Kolhapur, Maharashtra, India\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Get Fields",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "X-API-KEY", "value": "{{apiKey}}" }],
+        "url": { "raw": "{{baseUrl}}/api/field", "host": ["{{baseUrl}}"], "path": ["api", "field"] }
+      }
+    },
+    {
+      "name": "Create Activity",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }, { "key": "X-API-KEY", "value": "{{apiKey}}" }],
+        "url": { "raw": "{{baseUrl}}/api/activity", "host": ["{{baseUrl}}"], "path": ["api", "activity"] },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"fieldId\": 1,\n  \"activityDate\": \"2026-05-01\",\n  \"activityType\": \"fungicide\",\n  \"inputName\": \"Mancozeb\",\n  \"notes\": \"Preventive spray\"\n}"
+        }
+      }
+    },
+    {
+      "name": "Get Activities by Field",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "X-API-KEY", "value": "{{apiKey}}" }],
+        "url": { "raw": "{{baseUrl}}/api/activity/field/1", "host": ["{{baseUrl}}"], "path": ["api", "activity", "field", "1"] }
+      }
+    },
+    {
+      "name": "Weather by Field",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "X-API-KEY", "value": "{{apiKey}}" }],
+        "url": { "raw": "{{baseUrl}}/api/weather/field/1", "host": ["{{baseUrl}}"], "path": ["api", "weather", "field", "1"] }
+      }
+    },
+    {
+      "name": "Generate Recommendation",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "X-API-KEY", "value": "{{apiKey}}" }],
+        "url": { "raw": "{{baseUrl}}/api/smart/recommend/1", "host": ["{{baseUrl}}"], "path": ["api", "smart", "recommend", "1"] }
+      }
+    },
+    {
+      "name": "Trigger Alert Scan",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "X-API-KEY", "value": "{{apiKey}}" }],
+        "url": { "raw": "{{baseUrl}}/api/alerts/scan", "host": ["{{baseUrl}}"], "path": ["api", "alerts", "scan"] }
+      }
+    },
+    {
+      "name": "Get Alerts by Field",
+      "request": {
+        "method": "GET",
+        "header": [{ "key": "X-API-KEY", "value": "{{apiKey}}" }],
+        "url": { "raw": "{{baseUrl}}/api/alerts/field/1", "host": ["{{baseUrl}}"], "path": ["api", "alerts", "field", "1"] }
+      }
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8081" },
+    { "key": "apiKey", "value": "change-me-local" }
+  ]
+}

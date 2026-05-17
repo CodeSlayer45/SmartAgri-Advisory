@@ -1,0 +1,32 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: smart-agri-advisory-api
+    runtime: docker
+    plan: free
+    region: singapore
+    healthCheckPath: /actuator/health
+    dockerfilePath: ./Dockerfile
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: JAVA_TOOL_OPTIONS
+        value: -Xmx512m
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: OPENWEATHER_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_ENABLED
+        value: "true"
+      - key: OPENAI_MODEL
+        value: gpt-4o-mini
+      - key: APP_API_KEY
+        generateValue: true
+      - key: ADVISORY_ALERT_CRON
+        value: "0 0 */6 * * *"
