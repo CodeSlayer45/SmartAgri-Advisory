@@ -2,6 +2,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { api, checkBackendHealth, getStoredApiKey, setApiKey } from './api';
 import WeatherPanel from './components/WeatherPanel';
 import AlertsPanel from './components/AlertsPanel';
+import AppHeader from './components/AppHeader';
+import FieldSidebar from './components/FieldSidebar';
+import FieldOverview from './components/FieldOverview';
 
 const emptyField = {
   fieldName: '',
@@ -38,6 +41,7 @@ export default function App() {
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [activeTab, setActiveTab] = useState('dashboard');
 
   const clearMessages = () => {
     setError('');
@@ -144,6 +148,7 @@ export default function App() {
       setFieldForm(emptyField);
       const list = await loadFields();
       setSelectedFieldId(created.id);
+      setActiveTab('dashboard');
       if (!list.find((f) => f.id === created.id)) {
         setFields((prev) => [...prev, created]);
       }
@@ -211,309 +216,315 @@ export default function App() {
   const selectedField = fields.find((f) => f.id === selectedFieldId);
 
   return (
-    <div className="app">
-      <header className="header">
-        <div>
-          <h1>Smart Agri Advisory</h1>
-          <p>
-            Full farmer dashboard — fields, weather, activities, AI advisory, and
-            disease alerts.
-          </p>
-          <p className="status-line">
-            Backend:{' '}
-            {backendUp === null ? (
-              'checking…'
-            ) : backendUp.up ? (
-              <span className="status-up">connected</span>
-            ) : (
-              <span className="status-down">offline — start mvn spring-boot:run</span>
-            )}
-          </p>
+    <div className="app-shell">
+      <AppHeader
+        backendUp={backendUp}
+        apiKeyInput={apiKeyInput}
+        onApiKeyChange={setApiKeyInput}
+        onSaveKey={saveApiKey}
+      />
+
+      {(error || success) && (
+        <div className="toast-stack">
+          {error && <div className="toast toast-error">{error}</div>}
+          {success && <div className="toast toast-success">{success}</div>}
         </div>
-        <div className="settings-bar">
-          <label>
-            X-API-KEY
-            <input
-              type="password"
-              value={apiKeyInput}
-              onChange={(e) => setApiKeyInput(e.target.value)}
-              placeholder="change-me-local"
-            />
-          </label>
-          <button type="button" className="btn btn-secondary" onClick={saveApiKey}>
-            Save key
-          </button>
-        </div>
-      </header>
+      )}
 
-      {error && <div className="alert alert-error">{error}</div>}
-      {success && <div className="alert alert-success">{success}</div>}
-
-      <div className="grid">
-        <section className="card">
-          <h2>Your fields</h2>
-          {fields.length === 0 ? (
-            <p className="empty">No fields yet. Register one below.</p>
-          ) : (
-            <ul className="field-list">
-              {fields.map((f) => (
-                <li
-                  key={f.id}
-                  className={`field-item ${selectedFieldId === f.id ? 'selected' : ''}`}
-                  onClick={() => setSelectedFieldId(f.id)}
-                  onKeyDown={(e) => e.key === 'Enter' && setSelectedFieldId(f.id)}
-                  role="button"
-                  tabIndex={0}
-                >
-                  <div>
-                    <strong>{f.fieldName}</strong>
-                    <div className="field-meta">
-                      {f.cropName} · {f.acreage} acre · {f.cropAgeDays} days
-                    </div>
-                  </div>
-                  <span className="field-meta">{f.locationMode}</span>
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
-
-        <section className="card">
-          <h2>Register field</h2>
-          <form className="form-grid" onSubmit={handleCreateField}>
-            <label>
-              Field name
-              <input
-                required
-                value={fieldForm.fieldName}
-                onChange={(e) =>
-                  setFieldForm({ ...fieldForm, fieldName: e.target.value })
-                }
-              />
-            </label>
-            <label>
-              Crop
-              <input
-                required
-                value={fieldForm.cropName}
-                onChange={(e) =>
-                  setFieldForm({ ...fieldForm, cropName: e.target.value })
-                }
-              />
-            </label>
-            <label>
-              Acreage
-              <input
-                type="number"
-                step="0.1"
-                min="0.1"
-                required
-                value={fieldForm.acreage}
-                onChange={(e) =>
-                  setFieldForm({ ...fieldForm, acreage: e.target.value })
-                }
-              />
-            </label>
-            <label>
-              Location mode
-              <select
-                value={fieldForm.locationMode}
-                onChange={(e) =>
-                  setFieldForm({ ...fieldForm, locationMode: e.target.value })
-                }
-              >
-                <option value="AUTO_GPS">AUTO_GPS</option>
-                <option value="MANUAL">MANUAL</option>
-              </select>
-            </label>
-            {fieldForm.locationMode === 'MANUAL' ? (
-              <label>
-                Location
-                <input
-                  required
-                  value={fieldForm.location}
-                  onChange={(e) =>
-                    setFieldForm({ ...fieldForm, location: e.target.value })
-                  }
-                  placeholder="Kolhapur, Maharashtra, India"
-                />
-              </label>
-            ) : (
-              <>
-                <label>
-                  Latitude
-                  <input
-                    required
-                    value={fieldForm.latitude}
-                    onChange={(e) =>
-                      setFieldForm({ ...fieldForm, latitude: e.target.value })
-                    }
-                  />
-                </label>
-                <label>
-                  Longitude
-                  <input
-                    required
-                    value={fieldForm.longitude}
-                    onChange={(e) =>
-                      setFieldForm({ ...fieldForm, longitude: e.target.value })
-                    }
-                  />
-                </label>
-              </>
-            )}
-            <label>
-              Sowing date
-              <input
-                type="date"
-                required
-                value={fieldForm.sowingDate}
-                onChange={(e) =>
-                  setFieldForm({ ...fieldForm, sowingDate: e.target.value })
-                }
-              />
-            </label>
-            <button type="submit" className="btn btn-primary" disabled={loading}>
-              Create field
-            </button>
-          </form>
-        </section>
-
-        <WeatherPanel
-          weather={weather}
-          loading={weatherLoading}
-          onRefresh={() => loadWeather(selectedFieldId).catch((e) => setError(e.message))}
-          disabled={!selectedFieldId}
+      <div className="app-body">
+        <FieldSidebar
+          fields={fields}
+          selectedFieldId={selectedFieldId}
+          onSelect={setSelectedFieldId}
+          onRefresh={() => loadFields().catch((e) => setError(e.message))}
         />
 
-        <AlertsPanel
-          alerts={alerts}
-          loading={alertsLoading}
-          scanning={scanning}
-          onRefresh={() => loadAlerts(selectedFieldId).catch((e) => setError(e.message))}
-          onScan={handleScanAlerts}
-          disabled={!selectedFieldId}
-        />
+        <main className="main-panel">
+          <FieldOverview field={selectedField} />
 
-        <section className="card">
-          <h2>Log activity</h2>
-          {selectedField ? (
-            <p className="field-meta" style={{ marginTop: 0 }}>
-              For: <strong>{selectedField.fieldName}</strong>
-            </p>
-          ) : (
-            <p className="empty">Select a field first.</p>
-          )}
-          <form className="form-grid" onSubmit={handleCreateActivity}>
-            <label>
-              Date
-              <input
-                type="date"
-                required
-                value={activityForm.activityDate}
-                onChange={(e) =>
-                  setActivityForm({ ...activityForm, activityDate: e.target.value })
-                }
-              />
-            </label>
-            <label>
-              Type
-              <select
-                value={activityForm.activityType}
-                onChange={(e) =>
-                  setActivityForm({ ...activityForm, activityType: e.target.value })
-                }
-              >
-                <option value="fungicide">fungicide</option>
-                <option value="pesticide">pesticide</option>
-                <option value="fertilizer">fertilizer</option>
-                <option value="irrigation">irrigation</option>
-              </select>
-            </label>
-            <label>
-              Input name
-              <input
-                value={activityForm.inputName}
-                onChange={(e) =>
-                  setActivityForm({ ...activityForm, inputName: e.target.value })
-                }
-              />
-            </label>
-            <label>
-              Notes
-              <textarea
-                value={activityForm.notes}
-                onChange={(e) =>
-                  setActivityForm({ ...activityForm, notes: e.target.value })
-                }
-              />
-            </label>
+          <div className="tab-bar">
             <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={loading || !selectedFieldId}
+              type="button"
+              className={`tab ${activeTab === 'dashboard' ? 'active' : ''}`}
+              onClick={() => setActiveTab('dashboard')}
             >
-              Save activity
+              Field dashboard
             </button>
-          </form>
-          {activities.length > 0 && (
-            <ul className="reason-list" style={{ marginTop: '1rem' }}>
-              {activities.map((a) => (
-                <li key={a.id}>
-                  {a.activityDate}: {a.activityType}
-                  {a.inputName ? ` (${a.inputName})` : ''}
-                </li>
-              ))}
-            </ul>
-          )}
-        </section>
+            <button
+              type="button"
+              className={`tab ${activeTab === 'register' ? 'active' : ''}`}
+              onClick={() => setActiveTab('register')}
+            >
+              Register field
+            </button>
+          </div>
 
-        <section className="card full-width">
-          <h2>AI advisory</h2>
-          <p className="field-meta" style={{ marginTop: 0 }}>
-            Rules decide risk level and actions. Optional OpenAI rewrites text for farmers
-            when enabled on the server.
-          </p>
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={handleRecommend}
-            disabled={loading || !selectedFieldId}
-          >
-            Get recommendation
-          </button>
-
-          {recommendation && (
-            <div style={{ marginTop: '1.25rem' }}>
-              <div className="score-row">
-                <span className={`badge badge-${recommendation.riskLevel}`}>
-                  {recommendation.riskLevel}
-                </span>
-                <span className="score-value">{recommendation.riskScore}</span>
-                <span className="field-meta">risk score</span>
-              </div>
-              {recommendation.aiEnhanced && recommendation.farmerAdvisory && (
-                <div className="farmer-advisory-box">
-                  <span className="ai-badge">OpenAI farmer summary</span>
-                  <p className="farmer-advisory-text">{recommendation.farmerAdvisory}</p>
+          {activeTab === 'register' && (
+            <section className="card">
+              <h2>Register new field</h2>
+              <p className="field-meta card-intro">
+                Add a plot with crop details and location. Weather and recommendations use
+                this field&apos;s coordinates.
+              </p>
+              <form className="form-grid form-grid--2" onSubmit={handleCreateField}>
+                <label>
+                  Field name
+                  <input
+                    required
+                    value={fieldForm.fieldName}
+                    onChange={(e) =>
+                      setFieldForm({ ...fieldForm, fieldName: e.target.value })
+                    }
+                  />
+                </label>
+                <label>
+                  Crop
+                  <input
+                    required
+                    value={fieldForm.cropName}
+                    onChange={(e) =>
+                      setFieldForm({ ...fieldForm, cropName: e.target.value })
+                    }
+                  />
+                </label>
+                <label>
+                  Acreage
+                  <input
+                    type="number"
+                    step="0.1"
+                    min="0.1"
+                    required
+                    value={fieldForm.acreage}
+                    onChange={(e) =>
+                      setFieldForm({ ...fieldForm, acreage: e.target.value })
+                    }
+                  />
+                </label>
+                <label>
+                  Location mode
+                  <select
+                    value={fieldForm.locationMode}
+                    onChange={(e) =>
+                      setFieldForm({ ...fieldForm, locationMode: e.target.value })
+                    }
+                  >
+                    <option value="AUTO_GPS">AUTO_GPS</option>
+                    <option value="MANUAL">MANUAL</option>
+                  </select>
+                </label>
+                {fieldForm.locationMode === 'MANUAL' ? (
+                  <label className="span-2">
+                    Location
+                    <input
+                      required
+                      value={fieldForm.location}
+                      onChange={(e) =>
+                        setFieldForm({ ...fieldForm, location: e.target.value })
+                      }
+                      placeholder="Kolhapur, Maharashtra, India"
+                    />
+                  </label>
+                ) : (
+                  <>
+                    <label>
+                      Latitude
+                      <input
+                        required
+                        value={fieldForm.latitude}
+                        onChange={(e) =>
+                          setFieldForm({ ...fieldForm, latitude: e.target.value })
+                        }
+                      />
+                    </label>
+                    <label>
+                      Longitude
+                      <input
+                        required
+                        value={fieldForm.longitude}
+                        onChange={(e) =>
+                          setFieldForm({ ...fieldForm, longitude: e.target.value })
+                        }
+                      />
+                    </label>
+                  </>
+                )}
+                <label>
+                  Sowing date
+                  <input
+                    type="date"
+                    required
+                    value={fieldForm.sowingDate}
+                    onChange={(e) =>
+                      setFieldForm({ ...fieldForm, sowingDate: e.target.value })
+                    }
+                  />
+                </label>
+                <div className="form-actions span-2">
+                  <button type="submit" className="btn btn-primary" disabled={loading}>
+                    {loading ? 'Creating…' : 'Create field'}
+                  </button>
                 </div>
-              )}
+              </form>
+            </section>
+          )}
 
-              <h3 className="subsection-title">Why (rule engine)</h3>
-              <ul className="reason-list">
-                {recommendation.explainableReasons.map((r, i) => (
-                  <li key={i}>{r}</li>
-                ))}
-              </ul>
-              <h3 className="subsection-title">Actions (rule engine)</h3>
-              <ul className="reco-list">
-                {recommendation.recommendations.map((r, i) => (
-                  <li key={i}>{r}</li>
-                ))}
-              </ul>
+          {activeTab === 'dashboard' && (
+            <div className="dashboard-grid">
+              <WeatherPanel
+                weather={weather}
+                loading={weatherLoading}
+                onRefresh={() =>
+                  loadWeather(selectedFieldId).catch((e) => setError(e.message))
+                }
+                disabled={!selectedFieldId}
+              />
+
+              <AlertsPanel
+                alerts={alerts}
+                loading={alertsLoading}
+                scanning={scanning}
+                onRefresh={() =>
+                  loadAlerts(selectedFieldId).catch((e) => setError(e.message))
+                }
+                onScan={handleScanAlerts}
+                disabled={!selectedFieldId}
+              />
+
+              <section className="card">
+                <h2>Field activities</h2>
+                {selectedField ? (
+                  <p className="field-meta card-intro">
+                    Logging for <strong>{selectedField.fieldName}</strong>
+                  </p>
+                ) : (
+                  <p className="empty">Select a field from the sidebar first.</p>
+                )}
+                <form className="form-grid form-grid--2" onSubmit={handleCreateActivity}>
+                  <label>
+                    Date
+                    <input
+                      type="date"
+                      required
+                      value={activityForm.activityDate}
+                      onChange={(e) =>
+                        setActivityForm({
+                          ...activityForm,
+                          activityDate: e.target.value,
+                        })
+                      }
+                    />
+                  </label>
+                  <label>
+                    Type
+                    <select
+                      value={activityForm.activityType}
+                      onChange={(e) =>
+                        setActivityForm({
+                          ...activityForm,
+                          activityType: e.target.value,
+                        })
+                      }
+                    >
+                      <option value="fungicide">fungicide</option>
+                      <option value="pesticide">pesticide</option>
+                      <option value="fertilizer">fertilizer</option>
+                      <option value="irrigation">irrigation</option>
+                    </select>
+                  </label>
+                  <label>
+                    Input name
+                    <input
+                      value={activityForm.inputName}
+                      onChange={(e) =>
+                        setActivityForm({ ...activityForm, inputName: e.target.value })
+                      }
+                    />
+                  </label>
+                  <label className="span-2">
+                    Notes
+                    <textarea
+                      value={activityForm.notes}
+                      onChange={(e) =>
+                        setActivityForm({ ...activityForm, notes: e.target.value })
+                      }
+                    />
+                  </label>
+                  <div className="form-actions span-2">
+                    <button
+                      type="submit"
+                      className="btn btn-primary"
+                      disabled={loading || !selectedFieldId}
+                    >
+                      Save activity
+                    </button>
+                  </div>
+                </form>
+                {activities.length > 0 && (
+                  <ul className="timeline-list">
+                    {activities.map((a) => (
+                      <li key={a.id}>
+                        <span className="timeline-date">{a.activityDate}</span>
+                        <span className="timeline-body">
+                          {a.activityType}
+                          {a.inputName ? ` · ${a.inputName}` : ''}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+
+              <section className="card card--wide">
+                <h2>AI crop advisory</h2>
+                <p className="field-meta card-intro">
+                  Rule engine scores risk from weather, crop age, and activities. When OpenAI
+                  is enabled on the server, you also get a plain-language farmer summary.
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleRecommend}
+                  disabled={loading || !selectedFieldId}
+                >
+                  {loading ? 'Generating…' : 'Get recommendation'}
+                </button>
+
+                {recommendation && (
+                  <div className="reco-panel">
+                    <div className="score-row">
+                      <span className={`badge badge-${recommendation.riskLevel}`}>
+                        {recommendation.riskLevel}
+                      </span>
+                      <span className="score-value">{recommendation.riskScore}</span>
+                      <span className="field-meta">risk score</span>
+                    </div>
+                    {recommendation.aiEnhanced && recommendation.farmerAdvisory && (
+                      <div className="farmer-advisory-box">
+                        <span className="ai-badge">Farmer summary (AI)</span>
+                        <p className="farmer-advisory-text">
+                          {recommendation.farmerAdvisory}
+                        </p>
+                      </div>
+                    )}
+
+                    <h3 className="subsection-title">Why (rules)</h3>
+                    <ul className="reason-list">
+                      {recommendation.explainableReasons.map((r, i) => (
+                        <li key={i}>{r}</li>
+                      ))}
+                    </ul>
+                    <h3 className="subsection-title">Recommended actions</h3>
+                    <ul className="reco-list">
+                      {recommendation.recommendations.map((r, i) => (
+                        <li key={i}>{r}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </section>
             </div>
           )}
-        </section>
+        </main>
       </div>
     </div>
   );
