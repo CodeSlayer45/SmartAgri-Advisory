@@ -1,11 +1,32 @@
 target/
 .idea/
+.vscode/
 *.iml
 .classpath
 .project
 .settings/
 .env
+.env.*
+!.env.example
 *.log
+.DS_Store
+Thumbs.db
 
 frontend/node_modules/
 frontend/dist/
+frontend/.env
+frontend/.env.*
+
+# Android/Capacitor generated files (keep the Android source project tracked)
+frontend/android/.gradle/
+frontend/android/build/
+frontend/android/app/build/
+frontend/android/local.properties
+frontend/android/capacitor-cordova-android-plugins
+
+# Local migration/upgrade tool artifacts; not part of the application
+.github/java-upgrade/
+.github/modernize/
+
+# Personal drafts (not part of the project)
+linkedin-post.md

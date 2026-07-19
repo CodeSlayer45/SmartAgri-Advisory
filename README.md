@@ -273,8 +273,13 @@ Add that dashboard URL to `CORS_ALLOWED_ORIGINS` on the API.
 ## Project Structure
 
 ```text
-src/                 Spring Boot API, services, persistence, and tests
+backend/             Spring Boot API, services, persistence, and tests
+  ├── src/main/      Java source code
+  ├── src/test/      JUnit 5 + Mockito tests
+  └── pom.xml        Maven build file
 frontend/            React dashboard and Capacitor Android project
+  ├── src/           React components, utils, and tests
+  └── package.json   npm dependencies
 docs/                Deployment guide and Postman collection
 Dockerfile           Production backend container image
 render.yaml          Render deployment configuration

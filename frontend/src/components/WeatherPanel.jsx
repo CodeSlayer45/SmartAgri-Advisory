@@ -1,4 +1,34 @@
-export default function WeatherPanel({ weather, loading, onRefresh, disabled }) {
+function formatTime(iso) {
+  if (!iso) return null;
+  try {
+    return new Date(iso).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  } catch {
+    return null;
+  }
+}
+
+function WeatherSkeleton() {
+  return (
+    <div className="weather-grid weather-grid--skeleton" aria-hidden>
+      {[1, 2, 3, 4, 5, 6].map((n) => (
+        <div key={n} className="weather-stat">
+          <div className="skeleton-line skeleton-line--label" />
+          <div className="skeleton-line" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default function WeatherPanel({
+  weather,
+  loading,
+  onRefresh,
+  disabled,
+  lastUpdatedAt,
+}) {
+  const updatedLabel = formatTime(lastUpdatedAt);
+
   return (
     <section className="card">
       <div className="card-header-row">
@@ -13,11 +43,15 @@ export default function WeatherPanel({ weather, loading, onRefresh, disabled }) 
         </button>
       </div>
 
+      {updatedLabel && !loading && weather && (
+        <p className="field-meta last-updated">Last refreshed at {updatedLabel}</p>
+      )}
+
       {!weather && !loading && (
         <p className="empty">Select a field to load live weather for its location.</p>
       )}
 
-      {loading && <p className="empty">Fetching weather from OpenWeather…</p>}
+      {loading && <WeatherSkeleton />}
 
       {weather && !loading && (
         <div className="weather-grid">
@@ -45,6 +79,12 @@ export default function WeatherPanel({ weather, loading, onRefresh, disabled }) 
             <span className="weather-label">Source</span>
             <span className="weather-value">{weather.source}</span>
           </div>
+          {weather.source === 'mock' && (
+            <p className="weather-hint span-2">
+              Set <code>OPENWEATHER_API_KEY</code> on the server and restart the backend for live
+              weather.
+            </p>
+          )}
         </div>
       )}
     </section>

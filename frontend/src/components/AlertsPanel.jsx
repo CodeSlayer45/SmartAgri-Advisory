@@ -1,9 +1,20 @@
+function AlertsSkeleton() {
+  return (
+    <div className="skeleton-stack" aria-hidden>
+      <div className="skeleton-line" />
+      <div className="skeleton-line skeleton-line--short" />
+    </div>
+  );
+}
+
 export default function AlertsPanel({
   alerts,
   loading,
   scanning,
   onRefresh,
   onScan,
+  onDismiss,
+  dismissingId,
   disabled,
 }) {
   return (
@@ -34,11 +45,13 @@ export default function AlertsPanel({
         Scans all fields for high risk (same logic as scheduled job every 6 hours).
       </p>
 
+      {loading && <AlertsSkeleton />}
+
       {!alerts?.length && !loading && (
-        <p className="empty">No alerts for this field yet. Run a scan after high-risk conditions.</p>
+        <p className="empty">No active alerts for this field. Run a scan after high-risk conditions.</p>
       )}
 
-      {alerts?.length > 0 && (
+      {alerts?.length > 0 && !loading && (
         <ul className="alert-list">
           {alerts.map((a) => (
             <li key={a.id} className="alert-item">
@@ -50,6 +63,16 @@ export default function AlertsPanel({
               </div>
               <strong>{a.title}</strong>
               <p className="alert-message">{a.message}</p>
+              {onDismiss && (
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  disabled={disabled || dismissingId === a.id}
+                  onClick={() => onDismiss(a.id)}
+                >
+                  {dismissingId === a.id ? '…' : 'Dismiss'}
+                </button>
+              )}
             </li>
           ))}
         </ul>
