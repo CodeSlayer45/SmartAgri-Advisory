@@ -22,6 +22,132 @@ const emptyActivity = {
   activityType: 'fungicide', inputName: 'Mancozeb', notes: 'Preventive spray',
 };
 
+function DashboardHome({ fields, activeNav, setActiveNav, weatherAlerts }) {
+  const totalFields = fields.length;
+  const totalAcreage = fields.reduce((sum, f) => sum + Number(f.acreage || 0), 0);
+  const alertedFields = fields.filter(f => weatherAlerts?.some?.(a => a.fieldId === f.id) ?? false).length;
+  const avgAge = totalFields > 0
+    ? Math.round(fields.reduce((sum, f) => sum + (f.cropAgeDays || 0), 0) / totalFields)
+    : 0;
+
+  return (
+    <div className="dashboard-home">
+      <div className="dashboard-welcome">
+        <h2>🌱 Farm Dashboard</h2>
+        <p>Your crops at a glance — monitor fields, weather, and AI advisory.</p>
+      </div>
+
+      <div className="dashboard-metrics">
+        <div className="metric-card">
+          <div className="metric-icon metric-icon--fields">🌾</div>
+          <div className="metric-info">
+            <div className="metric-label">Registered Fields</div>
+            <div className="metric-value">{totalFields}</div>
+            <div className="metric-sub">{totalAcreage > 0 ? `${totalAcreage.toFixed(1)} total acres` : 'No fields yet'}</div>
+          </div>
+        </div>
+
+        <div className="metric-card">
+          <div className="metric-icon metric-icon--weather">🌡️</div>
+          <div className="metric-info">
+            <div className="metric-label">Avg. Crop Age</div>
+            <div className="metric-value">{avgAge}d</div>
+            <div className="metric-sub">Across {totalFields} field{totalFields !== 1 ? 's' : ''}</div>
+          </div>
+        </div>
+
+        <div className="metric-card">
+          <div className="metric-icon metric-icon--advisory">🧠</div>
+          <div className="metric-info">
+            <div className="metric-label">AI Advisory</div>
+            <div className="metric-value">Active</div>
+            <div className="metric-sub">Disease, market, growth insights</div>
+          </div>
+        </div>
+
+        <div className="metric-card">
+          <div className="metric-icon metric-icon--alerts">⚠️</div>
+          <div className="metric-info">
+            <div className="metric-label">Alerts</div>
+            <div className="metric-value">{alertedFields}</div>
+            <div className="metric-sub">Field{alertedFields !== 1 ? 's' : ''} need attention</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="dashboard-quick-actions">
+        <button className="quick-action-btn" onClick={() => setActiveNav('register')}>
+          <span className="qa-icon">➕</span> Register New Field
+        </button>
+        {totalFields > 0 && (
+          <>
+            <button className="quick-action-btn" onClick={() => setActiveNav('advisory')}>
+              <span className="qa-icon">🎯</span> Get AI Advisory
+            </button>
+            <button className="quick-action-btn" onClick={() => setActiveNav('disease')}>
+              <span className="qa-icon">📸</span> Disease Detection
+            </button>
+            <button className="quick-action-btn" onClick={() => setActiveNav('alerts')}>
+              <span className="qa-icon">🔔</span> View Alerts
+            </button>
+          </>
+        )}
+      </div>
+
+      {totalFields > 0 && (
+        <div className="dashboard-sections">
+          <div className="dashboard-section-card">
+            <div className="ds-header">
+              <span className="ds-title">🌾 Your Fields</span>
+              <button className="btn btn-ghost btn-sm" onClick={() => setActiveNav('fields')}>View all →</button>
+            </div>
+            <ul className="ds-list">
+              {fields.slice(0, 4).map(f => (
+                <li key={f.id} className="ds-item">
+                  <div>
+                    <div className="ds-item-name">{f.fieldName}</div>
+                    <div className="ds-item-detail">{f.cropName} · {f.cropAgeDays || 0}d old</div>
+                  </div>
+                  <span className="field-chip">{f.acreage} ac</span>
+                </li>
+              ))}
+              {fields.length > 4 && (
+                <li className="ds-item" style={{justifyContent:'center',color:'var(--muted)',fontSize:'0.8rem'}}>
+                  +{fields.length - 4} more field{fields.length - 4 !== 1 ? 's' : ''}
+                </li>
+              )}
+            </ul>
+          </div>
+
+          <div className="dashboard-section-card">
+            <div className="ds-header">
+              <span className="ds-title">⚡ Quick Actions</span>
+            </div>
+            <ul className="ds-list">
+              <li className="ds-item">
+                <span className="ds-item-name" style={{fontSize:'0.82rem'}}>🌤️ Check weather for all fields</span>
+                <button className="btn btn-ghost btn-sm" onClick={() => { if (fields[0]) setActiveNav('weather'); }}>Go</button>
+              </li>
+              <li className="ds-item">
+                <span className="ds-item-name" style={{fontSize:'0.82rem'}}>📋 Log field activity</span>
+                <button className="btn btn-ghost btn-sm" onClick={() => setActiveNav('activities')}>Go</button>
+              </li>
+              <li className="ds-item">
+                <span className="ds-item-name" style={{fontSize:'0.82rem'}}>💬 Ask AI about your farm</span>
+                <button className="btn btn-ghost btn-sm" onClick={() => setActiveNav('chat')}>Go</button>
+              </li>
+              <li className="ds-item">
+                <span className="ds-item-name" style={{fontSize:'0.82rem'}}>📈 View growth stages</span>
+                <button className="btn btn-ghost btn-sm" onClick={() => setActiveNav('growth')}>Go</button>
+              </li>
+            </ul>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function App() {
   const [apiKeyInput, setApiKeyInput] = useState(getStoredApiKey());
   const [backendUp, setBackendUp] = useState(null);
@@ -114,6 +240,9 @@ export default function App() {
 
   const selectedField = fields.find(f => f.id === selectedFieldId);
 
+  // Determine if we should show the dashboard home (no specific nav, or fields overview when no field selected)
+  const showDashboard = activeNav === 'dashboard' || (activeNav === 'fields' && !selectedField);
+
   return (
     <div className="app-shell">
       <AppHeader backendUp={backendUp} apiKeyInput={apiKeyInput} onApiKeyChange={setApiKeyInput} onSaveKey={() => { setApiKey(apiKeyInput.trim()); t('success', 'API key saved.'); }} />
@@ -128,13 +257,18 @@ export default function App() {
           onRefresh={() => loadFields().catch(e => t('error', e.message))} onRegisterField={() => setActiveNav('register')}
           activeNav={activeNav} onNavChange={setActiveNav} selectedFungicideDays={42} />
         <main className="main-panel">
+          {/* Dashboard Home */}
+          {showDashboard && (
+            <DashboardHome fields={fields} activeNav={activeNav} setActiveNav={setActiveNav} weatherAlerts={alerts.data} />
+          )}
+
           {activeNav === 'register' && (
-            <section className="card">
+            <section className="card card--accent">
               <h2>➕ Register new field</h2>
-              <p className="field-meta card-intro">Add a plot with crop details and location.</p>
+              <p className="field-meta card-intro">Add a plot with crop details and location to get started.</p>
               <form className={`form-grid form-grid--2 ${loading ? 'form-disabled' : ''}`} onSubmit={handleCreateField}>
-                <label>Field name <input required value={fieldForm.fieldName} disabled={loading} onChange={e => setFieldForm(f => ({...f, fieldName: e.target.value}))} /></label>
-                <label>Crop <input required value={fieldForm.cropName} onChange={e => setFieldForm(f => ({...f, cropName: e.target.value}))} /></label>
+                <label>Field name <input required value={fieldForm.fieldName} disabled={loading} onChange={e => setFieldForm(f => ({...f, fieldName: e.target.value}))} placeholder="e.g. North Field" /></label>
+                <label>Crop <input required value={fieldForm.cropName} onChange={e => setFieldForm(f => ({...f, cropName: e.target.value}))} placeholder="e.g. Rice, Wheat" /></label>
                 <label>Acreage <input type="number" step="0.1" min="0.1" required value={fieldForm.acreage} onChange={e => setFieldForm(f => ({...f, acreage: e.target.value}))} /></label>
                 <label>Location mode <select value={fieldForm.locationMode} onChange={e => setFieldForm(f => ({...f, locationMode: e.target.value}))}>
                   <option value="AUTO_GPS">GPS coordinates</option><option value="MANUAL">Place name</option>
@@ -143,7 +277,7 @@ export default function App() {
                 <div className="span-2"><FieldLocationPicker latitude={fieldForm.latitude} longitude={fieldForm.longitude} disabled={loading}
                   onChange={({latitude, longitude, location}) => setFieldForm(p => ({...p, latitude, longitude, location: location || p.location}))} /></div>
                 <label>Sowing date <input type="date" required value={fieldForm.sowingDate} onChange={e => setFieldForm(f => ({...f, sowingDate: e.target.value}))} /></label>
-                <div className="form-actions span-2"><button type="submit" className="btn btn-primary" disabled={loading}>{loading ? 'Creating…' : 'Create field'}</button></div>
+                <div className="form-actions span-2"><button type="submit" className="btn btn-primary" disabled={loading}>{loading ? '⏳ Creating…' : '🌱 Create field'}</button></div>
               </form>
             </section>
           )}
@@ -153,7 +287,7 @@ export default function App() {
               <FieldOverview field={selectedField} onEditField={() => setEditFieldOpen(true)}
                 onDeleteField={handleDeleteField} deleteDisabled={actingId === 'del'} />
               <FieldEditModal field={selectedField} open={editFieldOpen} onClose={() => setEditFieldOpen(false)}
-                onSaveBasics={async (body) => { clearToast(); await api.updateField(selectedFieldId, body); t('success', 'Updated.'); await loadFields(); setEditFieldOpen(false); }}
+                onSaveBasics={async (body) => { clearToast(); await api.updateField(selectedFieldId, body); t('success', 'Field updated.'); await loadFields(); setEditFieldOpen(false); }}
                 onSaveLocation={async (body) => { clearToast(); await api.updateFieldLocation(selectedFieldId, body); t('success', 'Location updated.'); await loadFields(); setEditFieldOpen(false); }} />
               <FieldsOverviewMap fields={fields} selectedFieldId={selectedFieldId} onSelectField={setSelectedFieldId} />
             </>
@@ -176,11 +310,11 @@ export default function App() {
               }}>
                 <label>Date <input type="date" required value={activityForm.activityDate} disabled={loading} onChange={e => setActivityForm(f => ({...f, activityDate: e.target.value}))} /></label>
                 <label>Type <select value={activityForm.activityType} disabled={loading} onChange={e => setActivityForm(f => ({...f, activityType: e.target.value}))}>
-                  <option value="fungicide">fungicide</option><option value="pesticide">pesticide</option><option value="fertilizer">fertilizer</option><option value="irrigation">irrigation</option>
+                  <option value="fungicide">🌿 fungicide</option><option value="pesticide">🐛 pesticide</option><option value="fertilizer">🧪 fertilizer</option><option value="irrigation">💧 irrigation</option>
                 </select></label>
-                <label>Input <input value={activityForm.inputName} disabled={loading} onChange={e => setActivityForm(f => ({...f, inputName: e.target.value}))} /></label>
-                <label className="span-2">Notes <textarea value={activityForm.notes} disabled={loading} onChange={e => setActivityForm(f => ({...f, notes: e.target.value}))} /></label>
-                <div className="form-actions span-2"><button type="submit" className="btn btn-primary" disabled={loading || !selectedFieldId}>Save activity</button></div>
+                <label>Input <input value={activityForm.inputName} disabled={loading} onChange={e => setActivityForm(f => ({...f, inputName: e.target.value}))} placeholder="e.g. Mancozeb" /></label>
+                <label className="span-2">Notes <textarea value={activityForm.notes} disabled={loading} onChange={e => setActivityForm(f => ({...f, notes: e.target.value}))} placeholder="Add notes about this activity…" /></label>
+                <div className="form-actions span-2"><button type="submit" className="btn btn-primary" disabled={loading || !selectedFieldId}>{loading ? '⏳ Saving…' : '💾 Save activity'}</button></div>
               </form>
               <ActivityCalendar activities={activities} fieldId={selectedFieldId}
                 onDeleteActivity={(id) => { clearToast(); api.deleteActivity(id).then(() => { t('success', 'Deleted.'); loadActivities(selectedFieldId); }).catch(e => t('error', e.message)); }}
@@ -190,17 +324,28 @@ export default function App() {
           )}
 
           {selectedField && activeNav === 'advisory' && (
-            <section className="card card--wide">
+            <section className="card card--wide card--highlight">
               <h2>🧠 AI crop advisory</h2>
-              <p className="field-meta card-intro">Risk analysis based on weather, crop age & activities.</p>
-              <button className="btn btn-primary" onClick={handleRecommend} disabled={loading || !selectedFieldId}>{loading ? '⏳' : '🎯 Get recommendation'}</button>
+              <p className="field-meta card-intro">Risk analysis based on weather, crop age & activities for <strong>{selectedField.fieldName}</strong>.</p>
+              <button className="btn btn-primary" onClick={handleRecommend} disabled={loading || !selectedFieldId}>
+                {loading ? '⏳ Analyzing…' : '🎯 Get recommendation'}
+              </button>
               {recommendation && (
                 <div className="reco-panel">
-                  <div className="score-row"><span className={`badge badge-${recommendation.riskLevel}`}>{recommendation.riskLevel}</span><span className="score-value">{recommendation.riskScore}</span><span className="field-meta">risk score</span></div>
-                  {recommendation.aiEnhanced && recommendation.farmerAdvisory && <div className="farmer-advisory-box"><span className="ai-badge">AI Summary</span><p className="farmer-advisory-text">{recommendation.farmerAdvisory}</p></div>}
-                  <h3 className="subsection-title">Why</h3>
+                  <div className="score-row">
+                    <span className={`badge badge-${recommendation.riskLevel}`}>{recommendation.riskLevel}</span>
+                    <span className="score-value">{recommendation.riskScore}</span>
+                    <span className="field-meta">risk score</span>
+                  </div>
+                  {recommendation.aiEnhanced && recommendation.farmerAdvisory && (
+                    <div className="farmer-advisory-box">
+                      <span className="ai-badge">🤖 AI Summary</span>
+                      <p className="farmer-advisory-text">{recommendation.farmerAdvisory}</p>
+                    </div>
+                  )}
+                  <h3 className="subsection-title">📊 Why</h3>
                   <ul className="reason-list">{recommendation.explainableReasons.map((r,i) => <li key={i}>{r}</li>)}</ul>
-                  <h3 className="subsection-title">Actions</h3>
+                  <h3 className="subsection-title">✅ Actions</h3>
                   <ul className="reco-list">{recommendation.recommendations.map((r,i) => <li key={i}>{r}</li>)}</ul>
                 </div>
               )}
@@ -216,15 +361,18 @@ export default function App() {
               dismissingId={actingId} disabled={!selectedFieldId} />
           )}
 
-          {(activeNav === 'disease' || activeNav === 'chat' || activeNav === 'market' || activeNav === 'growth') && (
+          {(activeNav === 'disease' || activeNav === 'chat' || activeNav === 'market' || activeNav === 'weather' || activeNav === 'growth') && (
             <AIPanel selectedFieldId={selectedFieldId} selectedField={selectedField} initialTab={activeNav} />
           )}
 
-          {!selectedField && activeNav !== 'register' && (
+          {!selectedField && activeNav !== 'register' && !showDashboard && (
             <div className="empty" style={{padding:'3rem'}}>
               <h2>👋 Welcome to Smart Agri Advisory</h2>
               <p>Select a field from the sidebar or register a new one to get started.</p>
-              <button className="btn btn-primary" onClick={() => setActiveNav('register')}>➕ Register field</button>
+              <div style={{display:'flex',gap:'0.75rem',justifyContent:'center',marginTop:'1rem'}}>
+                <button className="btn btn-primary" onClick={() => setActiveNav('register')}>➕ Register field</button>
+                <button className="btn btn-secondary" onClick={() => setActiveNav('dashboard')}>📊 Dashboard</button>
+              </div>
             </div>
           )}
         </main>

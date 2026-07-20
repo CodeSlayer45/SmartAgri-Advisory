@@ -33,8 +33,9 @@ export default function FieldOverview({
         </div>
         <div className="overview-actions">
           {onEditField && (
-            <button type="button" className="btn btn-secondary btn-sm" onClick={onEditField}>
-              Edit field
+            <button type="button" className="btn btn-secondary btn-sm" onClick={onEditField}
+              style={{background:'rgba(255,255,255,0.15)',color:'#fff',border:'1px solid rgba(255,255,255,0.2)'}}>
+              ✏️ Edit field
             </button>
           )}
           {onDeleteField && (
@@ -43,27 +44,28 @@ export default function FieldOverview({
               className="btn btn-danger-ghost btn-sm overview-delete"
               onClick={() => onDeleteField(field)}
               disabled={deleteDisabled}
+              style={{background:'rgba(255,255,255,0.08)',color:'rgba(255,255,255,0.8)',border:'1px solid rgba(255,255,255,0.15)'}}
             >
-              Delete field
+              🗑️ Delete
             </button>
           )}
         </div>
       </div>
       <div className="overview-stats">
         <div className="stat-tile">
-          <span className="stat-label">Crop</span>
+          <span className="stat-label">🌱 Crop</span>
           <span className="stat-value">{field.cropName}</span>
         </div>
         <div className="stat-tile">
-          <span className="stat-label">Age</span>
+          <span className="stat-label">📅 Age</span>
           <span className="stat-value">{field.cropAgeDays} days</span>
         </div>
         <div className="stat-tile">
-          <span className="stat-label">Area</span>
+          <span className="stat-label">📐 Area</span>
           <span className="stat-value">{field.acreage} acre</span>
         </div>
         <div className="stat-tile">
-          <span className="stat-label">Spray status</span>
+          <span className="stat-label">🧪 Spray status</span>
           <span
             className={`stat-value stat-value--sm ${fungicideDays > 10 || fungicideDays === -1 ? 'stat-warn' : ''}`}
           >
@@ -71,8 +73,11 @@ export default function FieldOverview({
           </span>
         </div>
         <div className="stat-tile">
-          <span className="stat-label">Location</span>
-          <span className="stat-value stat-value--sm">{field.location || '—'}</span>
+          <span className="stat-label">📍 Location</span>
+          <span className="stat-value stat-value--sm">
+            {field.location || '—'}
+            {field.latitude && field.longitude ? ` (${Number(field.latitude).toFixed(2)}, ${Number(field.longitude).toFixed(2)})` : ''}
+          </span>
         </div>
       </div>
     </div>

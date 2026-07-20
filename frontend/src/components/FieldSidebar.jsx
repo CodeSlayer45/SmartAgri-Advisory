@@ -1,6 +1,7 @@
 import { fungicideOverdue } from '../utils/spray';
 
 const NAV_ITEMS = [
+  { id: 'dashboard', label: 'Dashboard', icon: '◉' },
   { id: 'fields', label: 'My Fields', icon: '▤' },
   { id: 'weather', label: 'Weather', icon: '☀' },
   { id: 'activities', label: 'Activities', icon: '☰' },

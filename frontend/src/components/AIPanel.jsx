@@ -3,11 +3,11 @@ import { api } from '../api';
 import { takePhoto } from '../capacitorHooks';
 
 const TABS = [
-  { id: 'disease', icon: '', label: 'Disease Detection', action: 'analyzeCropHealth' },
-  { id: 'chat', icon: '', label: 'Ask AI', action: 'askAI' },
-  { id: 'market', icon: '', label: 'Market Price', action: 'getMarketPrice' },
-  { id: 'weather', icon: '', label: 'Weather Impact', action: 'getWeatherImpact' },
-  { id: 'growth', icon: '', label: 'Growth Stage', action: 'getGrowthStage' },
+  { id: 'disease', icon: '📸', label: 'Disease Detection', action: 'analyzeCropHealth' },
+  { id: 'chat', icon: '💬', label: 'Ask AI', action: 'askAI' },
+  { id: 'market', icon: '💰', label: 'Market Price', action: 'getMarketPrice' },
+  { id: 'weather', icon: '🌤️', label: 'Weather Impact', action: 'getWeatherImpact' },
+  { id: 'growth', icon: '📈', label: 'Growth Stage', action: 'getGrowthStage' },
 ];
 
 export default function AIPanel({ selectedFieldId, selectedField, initialTab }) {
@@ -91,7 +91,12 @@ export default function AIPanel({ selectedFieldId, selectedField, initialTab }) 
               {photo ? (
                 <div className="ai-photo-preview">
                   <img src={photo} alt="crop" className="ai-preview-img" />
-                  <button className="btn btn-sm btn-ghost" onClick={()=>{setPhoto(null);setResult(null);}}>Remove</button>
+                  <div className="btn-group" style={{marginTop:'0.35rem'}}>
+                    <button className="btn btn-sm btn-ghost" onClick={()=>{setPhoto(null);setResult(null);}}>Remove</button>
+                    <button className="btn btn-primary btn-sm" onClick={analyzePhoto} disabled={loading}>
+                      {loading ? '⏳ Analyzing...' : '🔍 Analyze'}
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="ai-photo-placeholder">
@@ -105,11 +110,8 @@ export default function AIPanel({ selectedFieldId, selectedField, initialTab }) 
                 </div>
               )}
             </div>
-            {photo && <div className="form-actions"><button className="btn btn-primary" onClick={analyzePhoto} disabled={loading}>
-              {loading ? ' Analyzing...' : ' Analyze'}
-            </button></div>}
             {result?.status === 'success' && <div className="ai-result-box">
-              <div className="ai-result-header"><span className="ai-badge">Analysis</span><span className="field-meta">{result.timestamp}</span></div>
+              <div className="ai-result-header"><span className="ai-badge">📊 Analysis</span><span className="field-meta">{result.timestamp}</span></div>
               <div className="ai-result-text">{renderResult(result.analysis)}</div>
             </div>}
           </div>
@@ -123,10 +125,10 @@ export default function AIPanel({ selectedFieldId, selectedField, initialTab }) 
               placeholder={`e.g. "Should I water ${selectedField?.cropName} today?"`} rows={3} className="ai-question-input" />
             <div className="form-actions" style={{marginTop:'0.5rem'}}>
               <button className="btn btn-primary" onClick={()=>fetchAI('askAI',[{ fieldId: selectedFieldId, question }])}
-                disabled={loading || !question.trim()}>{loading ? '...' : ' Ask'}</button>
+                disabled={loading || !question.trim()}>{loading ? '⏳ Thinking...' : '💬 Ask AI'}</button>
             </div>
             {result?.answer && <div className="ai-result-box">
-              <div className="ai-result-header"><span className="ai-badge">Answer</span></div>
+              <div className="ai-result-header"><span className="ai-badge">🤖 Answer</span></div>
               <div className="ai-result-text">{result.answer.split('\n').map((l,i)=>l.trim()?<p key={i} className="ai-result-line">{l}</p>:null)}</div>
             </div>}
           </div>
@@ -137,9 +139,9 @@ export default function AIPanel({ selectedFieldId, selectedField, initialTab }) 
           <div className="ai-panel-content">
             <p className="field-meta card-intro">Market analysis for <strong>{selectedField?.cropName}</strong>.</p>
             <button className="btn btn-primary" onClick={()=>fetchAI('getMarketPrice',[selectedField?.cropName, selectedField?.location])}
-              disabled={loading}>{loading ? '...' : ' Check Price'}</button>
+              disabled={loading}>{loading ? '⏳ Checking...' : '💰 Check Price'}</button>
             {result?.analysis && <div className="ai-result-box" style={{marginTop:'0.75rem'}}>
-              <div className="ai-result-header"><span className="ai-badge">Market</span><span className="field-meta">{result.crop}</span></div>
+              <div className="ai-result-header"><span className="ai-badge">📈 Market</span><span className="field-meta">{result.crop}</span></div>
               <div className="ai-result-text">{renderResult(result.analysis)}</div>
             </div>}
           </div>
@@ -150,13 +152,13 @@ export default function AIPanel({ selectedFieldId, selectedField, initialTab }) 
           <div className="ai-panel-content">
             <p className="field-meta card-intro">How today's weather affects your <strong>{selectedField?.cropName}</strong>.</p>
             <button className="btn btn-primary" onClick={()=>fetchAI('getWeatherImpact',[selectedFieldId])}
-              disabled={loading}>{loading ? '...' : ' Analyze'}</button>
+              disabled={loading}>{loading ? '⏳ Analyzing...' : '🌤️ Analyze'}</button>
             {result?.analysis && <div className="ai-result-box" style={{marginTop:'0.75rem'}}>
-              <div className="ai-result-header"><span className="ai-badge">Weather Impact</span></div>
+              <div className="ai-result-header"><span className="ai-badge">🌡️ Weather Impact</span></div>
               {result.weather && <div className="weather-grid" style={{marginBottom:'0.75rem'}}>
-                <div className="weather-stat"><span className="weather-label">Temp</span><span className="weather-value">{result.weather.temperatureC}°C</span></div>
-                <div className="weather-stat"><span className="weather-label">Humidity</span><span className="weather-value">{result.weather.humidityPercent}%</span></div>
-                <div className="weather-stat"><span className="weather-label">Rain</span><span className="weather-value">{result.weather.rainfallMm}mm</span></div>
+                <div className="weather-stat"><span className="weather-label">🌡️ Temp</span><span className="weather-value">{result.weather.temperatureC}°C</span></div>
+                <div className="weather-stat"><span className="weather-label">💧 Humidity</span><span className="weather-value">{result.weather.humidityPercent}%</span></div>
+                <div className="weather-stat"><span className="weather-label">🌧️ Rain</span><span className="weather-value">{result.weather.rainfallMm}mm</span></div>
               </div>}
               <div className="ai-result-text">{result.analysis.split('\n').map((l,i)=>l.trim()?<p key={i} className="ai-result-line">{l}</p>:null)}</div>
             </div>}
@@ -168,9 +170,9 @@ export default function AIPanel({ selectedFieldId, selectedField, initialTab }) 
           <div className="ai-panel-content">
             <p className="field-meta card-intro">Complete growth report for your <strong>{selectedField?.cropName}</strong>.</p>
             <button className="btn btn-primary" onClick={()=>fetchAI('getGrowthStage',[selectedFieldId])}
-              disabled={loading}>{loading ? '...' : ' Generate Report'}</button>
+              disabled={loading}>{loading ? '⏳ Generating...' : '📊 Generate Report'}</button>
             {result?.aiReport && <div className="ai-result-box" style={{marginTop:'0.75rem'}}>
-              <div className="ai-result-header"><span className="ai-badge">Growth Report</span><span className="field-meta">{result.daysSinceSowing} days old</span></div>
+              <div className="ai-result-header"><span className="ai-badge">🌱 Growth Report</span><span className="field-meta">{result.daysSinceSowing} days old</span></div>
               <div className="growth-stage-banner" style={{marginBottom:'0.5rem'}}>
                 <span className="growth-stage-label">Stage</span>
                 <span className="growth-stage-value">{result.currentStage}</span>
